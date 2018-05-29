@@ -7,38 +7,38 @@
 
 USE master;
 GO
-CREATE	DATABASE bodb_playtechCS_archive
+CREATE DATABASE bodb_playtechCS_archive
 	ON PRIMARY (
 		NAME = N'PTCS_Archive'
-	,	FILENAME = N'G:\bodb_PlaytechCS_archive\ptcs_archive_data.mdf'
+	,	FILENAME = N'\bodb_PlaytechCS_archive\ptcs_archive_data.mdf'
 	,	SIZE = 3072KB
 	,	MAXSIZE = UNLIMITED
 	,	FILEGROWTH = 32768KB
 	)
 	,	FILEGROUP PlaytechCS_Archive_Data (
 		NAME = N'PlaytechCS_Archive_Data_01'
-	,	FILENAME = N'G:\bodb_PlaytechCS_archive\PlaytechCS_Archive_Data_01.ndf'
+	,	FILENAME = N'\bodb_PlaytechCS_archive\PlaytechCS_Archive_Data_01.ndf'
 	,	SIZE = 2048KB
 	,	MAXSIZE = UNLIMITED
 	,	FILEGROWTH = 32768KB
 	)
 	,	FILEGROUP PlaytechCS_Archive_Index (
 		NAME = N'PlaytechCS_Archive_Index_01'
-	,	FILENAME = N'G:\bodb_PlaytechCS_archive\PlaytechCS_Archive_Index_01.ndf'
+	,	FILENAME = N'\bodb_PlaytechCS_archive\PlaytechCS_Archive_Index_01.ndf'
 	,	SIZE = 2048KB
 	,	MAXSIZE = UNLIMITED
 	,	FILEGROWTH = 32768KB
 	)
 	,	FILEGROUP PlaytechCS_Archive_Table (
 		NAME = N'PlaytechCS_Archive_Table_01'
-	,	FILENAME = N'G:\bodb_PlaytechCS_archive\PlaytechCS_Archive_Table_01.ndf'
+	,	FILENAME = N'\bodb_PlaytechCS_archive\PlaytechCS_Archive_Table_01.ndf'
 	,	SIZE = 2048KB
 	,	MAXSIZE = UNLIMITED
 	,	FILEGROWTH = 32768KB
 	)
 	LOG ON (
 		NAME = N'PTCS_Archive_log'
-	,	FILENAME = N'G:\Billy\bodb_PlaytechCS_archive\ptcs_archive_log.ldf'
+	,	FILENAME = N'\bodb_PlaytechCS_archive\ptcs_archive_log.ldf'
 	,	SIZE = 2048KB
 	,	MAXSIZE = 2048GB
 	,	FILEGROWTH = 32768KB
