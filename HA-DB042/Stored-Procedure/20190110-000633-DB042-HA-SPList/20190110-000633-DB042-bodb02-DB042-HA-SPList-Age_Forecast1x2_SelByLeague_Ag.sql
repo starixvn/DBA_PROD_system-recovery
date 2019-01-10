@@ -1,0 +1,92 @@
+
+SET QUOTED_IDENTIFIER ON 
+GO
+SET ANSI_NULLS ON 
+GO
+
+/****** Object:  Stored Procedure dbo.Age_Forecast1x2_SelByLeague_Ag    Script Date: 1/10/2019 12:06:34 AM ******/
+/****** Object:  Stored Procedure dbo.Age_Forecast1x2_SelByLeague_Ag    Script Date: 8/7/2018 11:11:42 PM ******/
+CREATE PROCEDURE [dbo].[Age_Forecast1x2_SelByLeague_Ag]
+	@leagueid int,
+	@custid int
+AS
+
+/*
+Task: Forecast for 1x2 bettype according to league.
+DB: DBAGE.bodb02
+Revisions: 
+	- 20090213@Kiwi: Remove inner join customer table because we retrieve data directly from bettrans table.
+	-- 20100527@Henry: Change to use StatusID instead of Status in WHERE statement
+	- 20110520@Johnson: change the type of variables @Bettype1x2, @BettypeHT1x2 to int
+	- 20150410@Tom: Modify Forecast function to support new 60 bet types [Feature #32738]
+	- 20180802@Helen: Update code for adjusting indexes - [Redmine:98757] 
+	Sample:  exec Age_Forecast1x2_SelByLeague_Ag 1,1
+*/
+BEGIN
+	SET NOCOUNT ON
+	--Declare @BetType1x2 int, @BetTypeHT1x2 int
+	--select @BetType1x2 = 5, @BetTypeHT1x2 = 15
+
+	DECLARE @tblBetType TABLE(BetType INT,isHT BIT)
+
+	INSERT INTO @tblBetType(BetType,isHT)
+	SELECT val AS BetType,0 isHT FROM strSplit('5',',') --BETTYPE FT
+	UNION ALL
+	SELECT val AS BetType,1 isHT FROM strSplit('15,167',',') --BETTYPE HT
+
+	select x.MatchID, x.homeid,	x.awayid,	
+		x.liveindicator, isnull(x.LiveHomeScore, 0) as livehomescore, isnull(x.LiveAwayScore, 0) as liveawayscore,x.ShowTime,x.MatchCode,isNeutral,
+		(x.awaywin - x.homelose - x.drawlose) 'al',
+		(x.homewin - x.awaylose - x.drawlose) 'hl',
+		(x.drawwin - x.awaylose - x.homelose) 'dl',
+	
+		(x.ht_awaywin - x.ht_drawlose - x.ht_homelose) 'ht_al',
+		(x.ht_homewin - x.ht_drawlose - x.ht_awaylose) 'ht_hl',
+		(x.ht_drawwin - x.ht_awaylose - x.ht_homelose) 'ht_dl'
+	from (select m.MatchID, m.homeid,	m.awayid,	
+			b.liveindicator, isnull(b.LiveHomeScore, 0) as livehomescore, isnull(b.LiveAwayScore, 0) as liveawayscore,M.ShowTime,M.MatchCode,
+			isnull(m.isNeutral, CONVERT(BIT,0)) as IsNeutral,
+			sum(case when betteam='1' and tblBetType.isHT = 0 then (case when odds < 0 then 1 else odds - 1 end) * stake * (b.apositiontaking) else 0 end) homewin,
+			sum(case when betteam='2' and tblBetType.isHT = 0 then (case when odds < 0 then 1 else odds - 1 end) * stake * (b.apositiontaking) else 0 end) awaywin,
+			sum(case when betteam='x' and tblBetType.isHT = 0 then (case when odds < 0 then 1 else odds - 1 end) * stake * (b.apositiontaking) else 0 end) drawwin,
+
+			sum(case when betteam='1' and tblBetType.isHT = 0 then (case when odds < 0 then abs(odds - 1) else 1 end)  * stake * (b.apositiontaking) else 0 end) homelose,
+			sum(case when betteam='2' and tblBetType.isHT = 0 then (case when odds < 0 then abs(odds - 1) else 1 end)  * stake * (b.apositiontaking) else 0 end) awaylose,
+			sum(case when betteam='x' and tblBetType.isHT = 0 then (case when odds < 0 then abs(odds - 1) else 1 end)  * stake * (b.apositiontaking) else 0 end) drawlose,
+
+			sum(case when betteam='1' and tblBetType.isHT = 1 then (case when odds < 0 then 1 else odds - 1 end) * stake * (b.apositiontaking) else 0 end) ht_homewin,
+			sum(case when betteam='2' and tblBetType.isHT = 1 then (case when odds < 0 then 1 else odds - 1 end) * stake * (b.apositiontaking) else 0 end) ht_awaywin,
+			sum(case when betteam='x' and tblBetType.isHT = 1 then (case when odds < 0 then 1 else odds - 1 end) * stake * (b.apositiontaking) else 0 end) ht_drawwin,
+
+			sum(case when betteam='1' and tblBetType.isHT = 1 then (case when odds < 0 then abs(odds - 1) else 1 end)  * stake * (b.apositiontaking) else 0 end) ht_homelose,
+			sum(case when betteam='2' and tblBetType.isHT = 1 then (case when odds < 0 then abs(odds - 1) else 1 end)  * stake * (b.apositiontaking) else 0 end) ht_awaylose,
+			sum(case when betteam='x' and tblBetType.isHT = 1 then (case when odds < 0 then abs(odds - 1) else 1 end)  * stake * (b.apositiontaking) else 0 end) ht_drawlose
+		from dbo.bettrans b WITH(NOLOCK, INDEX = IX_betrunning_recommend )
+			inner join dbo.Match M with (NOLOCK) on b.MatchID = M.MatchID and M.EventStatus = 'running'
+			INNER JOIN @tblBetType tblBetType ON b.bettype = tblBetType.BetType
+		where M.LeagueID = @LeagueID
+			AND b.recommend = @custid
+			and b.statusID in (0,1)
+			
+		group by b.liveindicator, b.currency ,m.MatchID, m.homeid, m.awayid,	
+			b.liveindicator, b.LiveHomeScore,b.LiveAwayScore,M.ShowTime,M.MatchCode,m.isNeutral
+		)x 
+
+END
+GO
+
+SET QUOTED_IDENTIFIER OFF 
+GO
+SET ANSI_NULLS ON 
+GO
+
+
+GO 
+ GRANT EXECUTE ON [dbo].[Age_Forecast1x2_SelByLeague_Ag] TO [bodbDownlineNet]
+GO 
+ GRANT EXECUTE ON [dbo].[Age_Forecast1x2_SelByLeague_Ag] TO [bodbDownlineNetView]
+GO 
+ GRANT EXECUTE ON [dbo].[Age_Forecast1x2_SelByLeague_Ag] TO [vnteam]
+GO 
+ GRANT VIEW DEFINITION ON [dbo].[Age_Forecast1x2_SelByLeague_Ag] TO [vnteam]
+GO 

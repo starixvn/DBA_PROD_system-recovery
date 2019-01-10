@@ -101,7 +101,8 @@ INCLUDE ( 	[odds],
 	[comstatus],
 	[betcheck],
 	[oddsspread],
-	[currency]) 
+	[currency],
+	[ExtraInfo]) 
 WHERE ([statusID] IN ((0), (1)))
 WITH (DROP_EXISTING = OFF, ONLINE = ON) ON [bettrans_index1]
 GO
@@ -143,7 +144,8 @@ INCLUDE ( 	[odds],
 	[comstatus],
 	[betcheck],
 	[oddsspread],
-	[currency]) 
+	[currency],
+	[ExtraInfo]) 
 WHERE ([statusID] IN ((0), (1)))
 WITH (DROP_EXISTING = OFF, ONLINE = ON) ON [bettrans_index1]
 GO
@@ -187,7 +189,8 @@ INCLUDE ( 	[odds],
 	[comstatus],
 	[betcheck],
 	[oddsspread],
-	[currency]) 
+	[currency],
+	[ExtraInfo]) 
 WHERE ([statusID] IN ((0), (1)))
 WITH (DROP_EXISTING = OFF, ONLINE = ON) ON [bettrans_index1]
 GO
