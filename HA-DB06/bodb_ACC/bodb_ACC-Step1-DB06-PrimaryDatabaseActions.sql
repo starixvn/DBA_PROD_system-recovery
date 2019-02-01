@@ -22,3 +22,12 @@ GO
 
 EXECUTE	msdb.dbo.sp_start_job @job_name = N'LSBackup_bodb_ACC';
 GO
+
+
+--	BEGIN STEP 3:
+--		Disable related jobs on DB06
+----------------------------------------------------------------------------------------------------
+
+EXECUTE	msdb.dbo.sp_update_job @job_name = N'bodb_ACC - Bet Monitoring Tool', @enabled = 0;
+EXECUTE	msdb.dbo.sp_update_job @job_name = N'bodb_Acc: Update Completed Match', @enabled = 0;
+GO

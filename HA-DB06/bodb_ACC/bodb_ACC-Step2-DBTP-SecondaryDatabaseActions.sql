@@ -47,3 +47,12 @@ WHERE	dp.type IN ('S', 'U')
 	AND	dp.principal_id >= 5
 	AND	ISNULL(sp.sid, 0xFF) <> ISNULL(dp.sid, 0xFE);
 GO
+
+
+--	BEGIN STEP 5:
+--		Enable related jobs on DBTP
+----------------------------------------------------------------------------------------------------
+
+EXECUTE	msdb.dbo.sp_update_job @job_name = N'bodb_ACC - Bet Monitoring Tool', @enabled = 1;
+EXECUTE	msdb.dbo.sp_update_job @job_name = N'bodb_Acc: Update Completed Match', @enabled = 1;
+GO
